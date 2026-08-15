@@ -61,7 +61,7 @@ public static class Strings
         ["traySettings"] = "Settings…",
         ["trayQuit"] = "Quit",
         ["quitPrompt"] = "Quitting removes the lock. Enter your code:",
-        ["defaultMessage"] = "It's {day}, {owner}.\nWhy do you want to open this? You should not open it.",
+        ["defaultMessage"] = "It's {day}, {owner}.\nYou're off. Go be off.",
 
         ["problem_badOpenFrom"] = "Open from: '{0}' is not a time of day. Use HH:mm, for example 07:00.",
         ["problem_badOpenUntil"] = "Open until: '{0}' is not a time of day. Use HH:mm, for example 17:00.",
@@ -119,7 +119,7 @@ public static class Strings
         ["traySettings"] = "Indstillinger…",
         ["trayQuit"] = "Afslut",
         ["quitPrompt"] = "Afslut fjerner låsen. Skriv din kode:",
-        ["defaultMessage"] = "Det er {day}, {owner}.\nHvorfor vil du åbne den? Du skal ikke åbne den.",
+        ["defaultMessage"] = "Det er {day}, {owner}.\nDu har fri. Så hav fri.",
 
         ["problem_badOpenFrom"] = "Åben fra: '{0}' er ikke et klokkeslæt. Brug TT:MM, for eksempel 07:00.",
         ["problem_badOpenUntil"] = "Åben til: '{0}' er ikke et klokkeslæt. Brug TT:MM, for eksempel 17:00.",
