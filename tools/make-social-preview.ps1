@@ -102,5 +102,18 @@ $g.FillPath($vb, $vig)
 $g.Dispose()
 $out = Join-Path (Get-Location) 'docs\assets\social-preview.png'
 $bmp.Save($out, [System.Drawing.Imaging.ImageFormat]::Png)
-$bmp.Dispose()
 "wrote $out ($([math]::Round((Get-Item $out).Length/1KB)) KB, ${W}x${H})"
+
+# --- the mark on its own, for the README hero -------------------------------
+# Cropped from the card so the two can never drift apart.
+$markOut = Join-Path (Get-Location) 'docs\assets\mark.png'
+$crop = New-Object System.Drawing.Rectangle $mx, $my, $mark, $mark
+$markBmp = $bmp.Clone($crop, $bmp.PixelFormat)
+$big = New-Object System.Drawing.Bitmap 256, 256
+$mg = [System.Drawing.Graphics]::FromImage($big)
+$mg.InterpolationMode = 'HighQualityBicubic'
+$mg.DrawImage($markBmp, 0, 0, 256, 256)
+$mg.Dispose()
+$big.Save($markOut, [System.Drawing.Imaging.ImageFormat]::Png)
+$big.Dispose(); $markBmp.Dispose(); $bmp.Dispose()
+"wrote $markOut ($([math]::Round((Get-Item $markOut).Length/1KB)) KB, 256x256)"

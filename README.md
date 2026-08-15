@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/assets/social-preview.png" alt="EmailLock" width="620">
+<img src="docs/assets/mark.png" alt="" width="88">
 
 # EmailLock
 
