@@ -1,0 +1,90 @@
+name: Bug report
+description: Something doesn't work the way the README says it does.
+labels: [bug]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing: a few things are **deliberate**, not bugs —
+        Task Manager can close EmailLock, webmail in a browser isn't covered, and an app
+        can flash on screen for up to a second before it closes.
+        See [Limitations](https://github.com/byensitmagnus/emaillock#limitations).
+
+  - type: input
+    id: version
+    attributes:
+      label: EmailLock version
+      description: Settings → the title bar, or Windows Settings → Apps.
+      placeholder: "2.0.0"
+    validations:
+      required: true
+
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      description: "Win+R → `winver`"
+      placeholder: "Windows 11 24H2 (build 26100)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: app
+    attributes:
+      label: Which app were you locking?
+      options:
+        - Classic Outlook (OUTLOOK.EXE)
+        - New Outlook (olk.exe)
+        - Teams
+        - Slack
+        - Thunderbird
+        - Something else
+        - Not app-specific
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Set locked days to ...
+        2. Open ...
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened instead
+    validations:
+      required: true
+
+  - type: dropdown
+    id: config
+    attributes:
+      label: Is your configuration customised?
+      description: Defaults are Saturday and Sunday locked, open 07:00–17:00.
+      options:
+        - Defaults, apart from my SOS code
+        - Customised
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Config and any error text
+      description: |
+        Paste `%APPDATA%\EmailLock\config.json` and any error message.
+        **Remove your SOS code first** — it's stored in plain text.
+      render: json
