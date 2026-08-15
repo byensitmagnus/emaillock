@@ -2,3 +2,7 @@ bin/
 obj/
 dist/
 *.user
+
+# tooling
+.kimi-code/
+
