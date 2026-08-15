@@ -1,0 +1,50 @@
+name: Feature request
+description: Suggest something EmailLock should do.
+labels: [enhancement]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        EmailLock is deliberately small. The most useful feature requests describe a
+        **problem**, not a solution — and the best outcome for many of them is
+        "no, and here's why", which keeps the app understandable for everyone else.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: What happens today, and what does it cost you?
+      placeholder: "I check Slack on my phone at 22:00, so locking the desktop app doesn't ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: philosophy
+    attributes:
+      label: How does this fit "friction, not a prison"?
+      description: |
+        EmailLock interrupts an automatic reflex. It is not built to overpower a
+        conscious decision, and it is not built for anyone to monitor anyone else.
+        If your request only works by making EmailLock harder to remove, say so —
+        it's still worth discussing, it just starts from a harder place.
+    validations:
+      required: true
+
+  - type: textarea
+    id: maintenance
+    attributes:
+      label: What ongoing maintenance would this add?
+      description: |
+        New dependency? Another integration to keep working? A setting that has to be
+        explained? Honest answers here make a "yes" much more likely.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checked
+    attributes:
+      label: Before submitting
+      options:
+        - label: I've read the [roadmap](https://github.com/byensitmagnus/emaillock/blob/main/docs/roadmap.md), including what has been deliberately rejected.
+          required: true
