@@ -1,0 +1,48 @@
+name: Release
+
+# Tagging v2.0.1 builds the installer and publishes it as that release.
+# The version lives in two files and both must match the tag -- see the check below.
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build installer and publish
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      # A tag that disagrees with the built artefact would ship a mislabelled installer.
+      - name: Tag matches project version
+        shell: pwsh
+        run: |
+          $tag = '${{ github.ref_name }}'.TrimStart('v')
+          $iss = (Select-String installer\EmailLock.iss -Pattern '#define AppVersion "([^"]+)"').Matches[0].Groups[1].Value
+          $csproj = (Select-String src\EmailLock\EmailLock.csproj -Pattern '<Version>([^<]+)</Version>').Matches[0].Groups[1].Value
+          Write-Host "tag=$tag  installer=$iss  csproj=$csproj"
+          if ($tag -ne $iss)    { throw "tag $tag does not match installer/EmailLock.iss ($iss)" }
+          if ($tag -ne $csproj) { throw "tag $tag does not match EmailLock.csproj ($csproj)" }
+
+      - name: Install Inno Setup
+        run: choco install innosetup --no-progress -y
+
+      # build.ps1 runs the tests first and refuses to package a red build.
+      - name: Build release
+        shell: pwsh
+        run: .\build.ps1
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*-setup.exe
+          fail_on_unmatched_files: true
