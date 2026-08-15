@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>EmailLock</AssemblyName>
+    <RootNamespace>EmailLock</RootNamespace>
+    <ApplicationIcon>ui\app.ico</ApplicationIcon>
+    <Version>2.0.0</Version>
+    <Product>EmailLock</Product>
+    <Company>EmailLock</Company>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="ui\*.html" />
+    <EmbeddedResource Include="ui\*.css" />
+  </ItemGroup>
+
+</Project>

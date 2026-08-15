@@ -1,0 +1,201 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>/*CSS*/</style>
+<style>
+  .stage { height: 100%; display: grid; place-items: center; position: relative; }
+
+  main {
+    position: relative;
+    width: min(680px, 78vw);
+    text-align: center;
+    z-index: 1;
+  }
+
+  /* A hairline that draws itself in — the only "chrome" on the screen. */
+  .rule {
+    width: 44px; height: 1px; margin: 0 auto 30px;
+    background: var(--amber);
+    transform-origin: center;
+    animation: draw 1.4s var(--ease) forwards;
+  }
+  @keyframes draw { from { transform: scaleX(0); opacity: 0; } to { transform: scaleX(1); opacity: 1; } }
+
+  h1 {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: clamp(38px, 5.2vw, 68px);
+    line-height: 1.08;
+    letter-spacing: -0.015em;
+    margin: 18px 0 0;
+    text-wrap: balance;
+  }
+
+  .sub {
+    font-family: var(--text);
+    font-size: clamp(17px, 1.7vw, 21px);
+    font-style: italic;
+    line-height: 1.5;
+    color: var(--paper-dim);
+    margin-top: 18px;
+    text-wrap: balance;
+  }
+
+  .until {
+    margin-top: 52px;
+    font-size: 13px;
+    color: var(--paper-faint);
+    letter-spacing: 0.02em;
+  }
+  .until b {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: 19px;
+    color: var(--amber);
+    letter-spacing: 0.01em;
+    margin-left: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .actions { margin-top: 46px; display: flex; flex-direction: column; align-items: center; gap: 22px; }
+
+  /* SOS panel replaces the message in place, rather than opening a second window. */
+  .sos-panel { display: none; }
+  .sos-panel.on { display: block; animation: rise 0.7s var(--ease) forwards; }
+  .locked-panel.off { display: none; }
+
+  .sos-panel h2 {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: clamp(30px, 3.4vw, 44px);
+    letter-spacing: -0.01em;
+  }
+  .sos-panel .hint { margin-top: 14px; font-size: 13.5px; color: var(--paper-faint); }
+
+  .code-row { margin-top: 34px; display: flex; gap: 10px; justify-content: center; }
+  .code-row input {
+    width: 260px;
+    text-align: center;
+    font-size: 15px;
+    letter-spacing: 0.06em;
+    padding: 14px 16px;
+  }
+
+  .wrong { color: var(--amber); font-size: 13px; margin-top: 18px; height: 16px; opacity: 0; }
+  .wrong.on { opacity: 1; }
+  .shake { animation: shake 0.42s cubic-bezier(.36,.07,.19,.97); }
+  @keyframes shake {
+    10%, 90% { transform: translateX(-2px); }
+    30%, 70% { transform: translateX(4px); }
+    50%      { transform: translateX(-5px); }
+  }
+
+  footer {
+    position: fixed; bottom: 26px; left: 0; right: 0;
+    text-align: center;
+    font-size: 10.5px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: rgba(247,242,234,0.13);
+  }
+</style>
+</head>
+<body>
+  <div class="glow"></div>
+  <div class="vignette"></div>
+  <div class="grain"></div>
+
+  <div class="stage">
+    <main>
+      <section class="locked-panel">
+        <div class="rule"></div>
+        <div class="eyebrow rise" style="animation-delay:.05s" id="eyebrow"></div>
+        <h1 class="rise" style="animation-delay:.14s" id="headline"></h1>
+        <p class="sub rise" style="animation-delay:.26s" id="subline"></p>
+        <div class="until rise" style="animation-delay:.4s" id="until"></div>
+        <div class="actions rise" style="animation-delay:.54s">
+          <button class="btn" id="dismiss"></button>
+          <button class="btn-quiet" id="sos"></button>
+        </div>
+      </section>
+
+      <section class="sos-panel">
+        <div class="rule"></div>
+        <h2 id="sosTitle"></h2>
+        <p class="hint" id="sosHint"></p>
+        <div class="code-row">
+          <input type="password" id="code" autocomplete="off" spellcheck="false">
+          <button class="btn btn-amber" id="unlock"></button>
+        </div>
+        <div class="wrong" id="wrong"></div>
+        <div class="actions" style="margin-top:26px">
+          <button class="btn-quiet" id="cancel"></button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <footer>EmailLock</footer>
+
+<script>
+const T = window.APP.t;
+const $ = id => document.getElementById(id);
+const send = m => window.chrome.webview.postMessage(m);
+
+$('eyebrow').textContent  = T.lockedNow;
+$('headline').textContent = window.APP.headline;
+$('subline').textContent  = window.APP.subline;
+$('dismiss').textContent  = T.dismiss;
+$('sos').textContent      = T.sos;
+$('sosTitle').textContent = T.sosTitle;
+$('sosHint').textContent  = T.sosHint;
+$('unlock').textContent   = T.unlock;
+$('cancel').textContent   = T.cancel;
+
+// Countdown to the next open minute, recomputed locally so it stays live without chatter.
+function tick() {
+  const iso = window.APP.nextUnlock;
+  if (!iso) { $('until').textContent = T.opensNever; return; }
+  const ms = new Date(iso) - new Date();
+  if (ms <= 0) { send({ type: 'expired' }); return; }
+  const mins = Math.floor(ms / 60000);
+  const h = Math.floor(mins / 60), m = mins % 60;
+  const span = h > 0 ? `${h}${T.hour} ${String(m).padStart(2, '0')}${T.minute}` : `${m}${T.minute}`;
+  $('until').innerHTML = T.opensIn + '<b>' + span + '</b>';
+}
+tick();
+setInterval(tick, 15000);
+
+const locked = document.querySelector('.locked-panel');
+const panel  = document.querySelector('.sos-panel');
+
+$('dismiss').onclick = () => send({ type: 'dismiss' });
+
+$('sos').onclick = () => {
+  locked.classList.add('off');
+  panel.classList.add('on');
+  setTimeout(() => $('code').focus(), 60);
+};
+
+$('cancel').onclick = () => {
+  panel.classList.remove('on');
+  locked.classList.remove('off');
+  $('code').value = '';
+  $('wrong').classList.remove('on');
+};
+
+$('unlock').onclick = () => send({ type: 'sos', code: $('code').value });
+$('code').onkeydown = e => { if (e.key === 'Enter') $('unlock').click(); };
+
+// Called from C# after it checks the code, so the comparison never lives in the page.
+window.sosRejected = () => {
+  const w = $('wrong');
+  w.textContent = T.sosWrong;
+  w.classList.add('on');
+  $('code').value = '';
+  document.querySelector('.code-row').classList.add('shake');
+  setTimeout(() => document.querySelector('.code-row').classList.remove('shake'), 450);
+  $('code').focus();
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+<Project>
+
+  <!-- The WebView2 package ships WinForms and WPF hosts side by side. We only use the
+       WinForms one; leaving the WPF assembly in the reference set drags in a second
+       WindowsBase and every build prints MSB3277. Drop it before references resolve. -->
+  <Target Name="DropWebView2Wpf" BeforeTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <Reference Remove="@(Reference)" Condition="'%(Filename)' == 'Microsoft.Web.WebView2.Wpf'" />
+    </ItemGroup>
+  </Target>
+
+</Project>

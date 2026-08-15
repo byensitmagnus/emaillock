@@ -1,0 +1,325 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>/*CSS*/</style>
+<style>
+  body { background: var(--ink-raised); }
+
+  .shell { height: 100%; display: flex; flex-direction: column; position: relative; z-index: 1; }
+
+  /* Titlebar — the window is borderless, so this is the whole chrome. */
+  header {
+    flex: none;
+    height: 52px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 10px 0 24px;
+    border-bottom: 1px solid var(--line);
+    -webkit-user-select: none;
+  }
+  #drag { flex: 1; height: 100%; display: flex; align-items: center; gap: 10px; }
+  .wordmark { font-size: 11px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: var(--paper-dim); }
+  .win-btn {
+    width: 40px; height: 32px; border-radius: 8px; color: var(--paper-faint);
+    display: grid; place-items: center; font-size: 15px;
+    transition: background 0.25s var(--ease), color 0.25s var(--ease);
+  }
+  .win-btn:hover { background: rgba(247,242,234,0.07); color: var(--paper); }
+  .win-btn.close:hover { background: #b3312b; color: #fff; }
+
+  /* Status */
+  .status {
+    flex: none; margin: 22px 24px 4px;
+    display: flex; align-items: center; gap: 13px;
+    padding: 17px 20px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(247,242,234,0.035), transparent);
+  }
+  .dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+  .dot.locked { background: var(--amber); box-shadow: 0 0 0 4px var(--amber-sunk); }
+  .dot.open   { background: #6ba368; box-shadow: 0 0 0 4px rgba(107,163,104,0.14); }
+  .status .lead { font-family: var(--display); font-size: 18px; letter-spacing: -0.01em; }
+  .status .tail { font-size: 12.5px; color: var(--paper-faint); margin-top: 3px; }
+
+  /* Body */
+  .scroll { flex: 1; overflow-y: auto; padding: 8px 24px 26px; }
+  .scroll::-webkit-scrollbar { width: 10px; }
+  .scroll::-webkit-scrollbar-thumb { background: rgba(247,242,234,0.09); border-radius: 99px; border: 3px solid var(--ink-raised); }
+
+  section { padding: 26px 0; border-bottom: 1px solid var(--line); }
+  section:last-of-type { border-bottom: none; }
+  section > .eyebrow { margin-bottom: 18px; }
+
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 9px 0; }
+  .row .label { font-size: 14px; }
+  /* Notes appear both inside rows and standalone under a section heading, so this
+     must not be scoped to .row -- it was, and the standalone ones rendered unstyled. */
+  .note { font-size: 12px; color: var(--paper-faint); margin-top: 3px; line-height: 1.45; }
+  .row .note { max-width: 380px; }
+  .row input[type="text"] { width: 240px; }
+  .row input[type="number"] { width: 96px; }
+
+  /* Day pills */
+  .days { display: flex; gap: 7px; flex-wrap: wrap; }
+  .pill {
+    padding: 9px 15px; border-radius: 999px;
+    border: 1px solid var(--line-bright);
+    font-size: 13px; color: var(--paper-faint);
+    transition: all 0.3s var(--ease);
+  }
+  .pill:hover { color: var(--paper-dim); }
+  .pill.on { background: var(--amber-sunk); border-color: var(--amber); color: var(--amber-hot); }
+
+  /* App chips */
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 9px;
+    padding: 8px 10px 8px 14px; border-radius: 999px;
+    border: 1px solid var(--line-bright); font-size: 13px;
+  }
+  .chip .x { color: var(--paper-faint); font-size: 15px; line-height: 1; padding: 0 2px; }
+  .chip .x:hover { color: var(--amber); }
+  .chips input { width: 150px; padding: 8px 13px; border-radius: 999px; font-size: 13px; }
+
+  /* Switch */
+  .sw { width: 46px; height: 27px; border-radius: 99px; background: rgba(247,242,234,0.12); position: relative; transition: background 0.35s var(--ease); flex: none; }
+  .sw::after { content: ''; position: absolute; top: 3px; left: 3px; width: 21px; height: 21px; border-radius: 50%; background: var(--paper-dim); transition: all 0.35s var(--ease); }
+  .sw.on { background: var(--amber); }
+  .sw.on::after { left: 22px; background: #1a1206; }
+
+  textarea {
+    width: 100%; min-height: 84px; resize: none;
+    font-family: var(--text); font-size: 14px; line-height: 1.55; color: var(--paper);
+    background: var(--ink-sunk); border: 1px solid var(--line); border-radius: 10px;
+    padding: 13px 15px; outline: none; cursor: text;
+  }
+  textarea:focus { border-color: var(--amber); }
+
+  /* Footer */
+  footer {
+    flex: none; padding: 16px 24px;
+    border-top: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: space-between; gap: 20px;
+    background: var(--ink-sunk);
+  }
+  .problems { font-size: 12.5px; color: var(--amber); line-height: 1.5; flex: 1; }
+  .saved { font-size: 12.5px; color: var(--paper-faint); opacity: 0; transition: opacity 0.4s var(--ease); }
+  .saved.on { opacity: 1; }
+</style>
+</head>
+<body>
+  <div class="glow" style="height:60vh;opacity:.45"></div>
+  <div class="grain"></div>
+
+  <div class="shell">
+    <header>
+      <div id="drag"><span class="wordmark">EmailLock</span></div>
+      <button class="win-btn" id="min">&#8211;</button>
+      <button class="win-btn close" id="close">&#10005;</button>
+    </header>
+
+    <div class="status">
+      <div class="dot" id="dot"></div>
+      <div>
+        <div class="lead" id="statusLead"></div>
+        <div class="tail" id="statusTail"></div>
+      </div>
+    </div>
+
+    <div class="scroll">
+      <section>
+        <div class="eyebrow" id="s-code"></div>
+        <div class="row">
+          <div>
+            <div class="label" id="l-owner"></div>
+            <div class="note" id="n-owner"></div>
+          </div>
+          <input type="text" id="owner">
+        </div>
+        <div class="row">
+          <div>
+            <div class="label" id="l-sos"></div>
+            <div class="note" id="n-sos"></div>
+          </div>
+          <input type="text" id="sosCode">
+        </div>
+      </section>
+
+      <section>
+        <div class="eyebrow" id="s-days"></div>
+        <div class="days" id="days"></div>
+      </section>
+
+      <section>
+        <div class="eyebrow" id="s-hours"></div>
+        <div class="row">
+          <div>
+            <div class="label" id="l-hours"></div>
+            <div class="note" id="n-hours"></div>
+          </div>
+          <div style="display:flex;gap:9px;align-items:center">
+            <input type="time" id="openFrom">
+            <span style="color:var(--paper-faint)">&ndash;</span>
+            <input type="time" id="openUntil">
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="eyebrow" id="s-apps"></div>
+        <div class="note" style="margin-bottom:14px" id="n-apps"></div>
+        <div class="chips" id="chips"></div>
+      </section>
+
+      <section>
+        <div class="eyebrow" id="s-more"></div>
+        <div class="row">
+          <div>
+            <div class="label" id="l-sosmin"></div>
+            <div class="note" id="n-sosmin"></div>
+          </div>
+          <input type="number" id="sosMinutes" min="1" max="1440">
+        </div>
+        <div class="row">
+          <div>
+            <div class="label" id="l-grace"></div>
+            <div class="note" id="n-grace"></div>
+          </div>
+          <input type="number" id="graceSeconds" min="0" max="600">
+        </div>
+        <div class="row">
+          <div>
+            <div class="label" id="l-auto"></div>
+            <div class="note" id="n-auto"></div>
+          </div>
+          <div class="sw" id="autostart"></div>
+        </div>
+      </section>
+
+      <section>
+        <div class="eyebrow" id="s-msg"></div>
+        <div class="note" style="margin-bottom:12px" id="n-msg"></div>
+        <textarea id="message" spellcheck="false"></textarea>
+      </section>
+    </div>
+
+    <footer>
+      <div class="problems" id="problems"></div>
+      <div class="saved" id="saved"></div>
+      <button class="btn btn-amber" id="save"></button>
+    </footer>
+  </div>
+
+<script>
+const T = window.APP.t, C = window.APP.config;
+const $ = id => document.getElementById(id);
+const send = m => window.chrome.webview.postMessage(m);
+
+// Labels
+const labels = {
+  's-code': T.secCode, 'l-owner': T.owner, 'n-owner': T.ownerNote,
+  'l-sos': T.sosCode, 'n-sos': T.sosCodeNote,
+  's-days': T.secDays, 's-hours': T.secHours, 'l-hours': T.hours, 'n-hours': T.hoursNote,
+  's-apps': T.secApps, 'n-apps': T.appsNote,
+  's-more': T.secMore, 'l-sosmin': T.sosMinutes, 'n-sosmin': T.sosMinutesNote,
+  'l-grace': T.grace, 'n-grace': T.graceNote,
+  'l-auto': T.autostart, 'n-auto': T.autostartNote,
+  's-msg': T.secMsg, 'n-msg': T.msgNote, 'save': T.save, 'saved': T.savedOk
+};
+for (const [id, text] of Object.entries(labels)) $(id).textContent = text;
+
+// Fill
+$('owner').value = C.owner;
+$('sosCode').value = C.sosCode;
+$('openFrom').value = C.openFrom;
+$('openUntil').value = C.openUntil;
+$('sosMinutes').value = C.sosMinutes;
+$('graceSeconds').value = C.graceSeconds;
+$('message').value = C.message;
+$('autostart').classList.toggle('on', window.APP.autostart);
+
+// Status
+$('dot').className = 'dot ' + (window.APP.locked ? 'locked' : 'open');
+$('statusLead').textContent = window.APP.locked ? T.stateLocked : T.stateOpen;
+$('statusTail').textContent = window.APP.statusTail;
+
+// Days
+let days = C.lockedDays.slice();
+window.APP.dayNames.forEach((name, i) => {
+  const key = window.APP.dayKeys[i];
+  const b = document.createElement('button');
+  b.className = 'pill' + (days.includes(key) ? ' on' : '');
+  b.textContent = name;
+  b.onclick = () => {
+    days = days.includes(key) ? days.filter(d => d !== key) : days.concat(key);
+    b.classList.toggle('on');
+  };
+  $('days').appendChild(b);
+});
+
+// App chips
+let apps = C.apps.slice();
+function drawChips() {
+  $('chips').innerHTML = '';
+  apps.forEach(a => {
+    const c = document.createElement('span');
+    c.className = 'chip';
+    c.textContent = a;
+    const x = document.createElement('button');
+    x.className = 'x';
+    x.innerHTML = '&#10005;';
+    x.onclick = () => { apps = apps.filter(v => v !== a); drawChips(); };
+    c.appendChild(x);
+    $('chips').appendChild(c);
+  });
+  const inp = document.createElement('input');
+  inp.type = 'text';
+  inp.placeholder = T.addApp;
+  inp.onkeydown = e => {
+    if (e.key !== 'Enter') return;
+    const v = inp.value.trim().replace(/\.exe$/i, '');
+    if (v && !apps.includes(v)) { apps.push(v); drawChips(); $('chips').querySelector('input').focus(); }
+  };
+  $('chips').appendChild(inp);
+}
+drawChips();
+
+$('autostart').onclick = () => $('autostart').classList.toggle('on');
+$('min').onclick   = () => send({ type: 'minimise' });
+$('close').onclick = () => send({ type: 'close' });
+$('drag').onmousedown = e => { if (e.button === 0) send({ type: 'drag' }); };
+
+$('save').onclick = () => send({
+  type: 'save',
+  config: {
+    owner: $('owner').value,
+    sosCode: $('sosCode').value,
+    apps: apps,
+    lockedDays: days,
+    openFrom: $('openFrom').value,
+    openUntil: $('openUntil').value,
+    sosMinutes: +$('sosMinutes').value,
+    graceSeconds: +$('graceSeconds').value,
+    message: $('message').value
+  },
+  autostart: $('autostart').classList.contains('on')
+});
+
+// C# answers every save: either a list of problems, or an empty list plus a fresh status.
+window.saveResult = (problems, status) => {
+  $('problems').textContent = problems.join('  ');
+  $('saved').classList.toggle('on', problems.length === 0);
+  if (problems.length === 0) setTimeout(() => $('saved').classList.remove('on'), 2600);
+  if (status) {
+    $('dot').className = 'dot ' + (status.locked ? 'locked' : 'open');
+    $('statusLead').textContent = status.lead;
+    $('statusTail').textContent = status.tail;
+  }
+};
+
+// If the window opened by itself, it was because the stored config was unusable. Say why.
+if (window.APP.problems.length) window.saveResult(window.APP.problems, null);
+</script>
+</body>
+</html>

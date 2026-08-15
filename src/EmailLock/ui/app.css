@@ -1,0 +1,158 @@
+/* EmailLock — shared design tokens.
+   Direction: quiet luxury. Warm near-black ground, one amber accent, a serif with real
+   voice (Sitka Banner, Matthew Carter, ships with Windows) against a neutral UI face.
+   Nothing shouts. The lock screen should feel like dusk, not like an error. */
+
+:root {
+  color-scheme: dark;
+
+  --ink:        #0a0908;
+  --ink-raised: #141110;
+  --ink-sunk:   #060505;
+
+  --paper:       #f7f2ea;
+  --paper-dim:   #a79c8e;
+  --paper-faint: #6d6459;
+
+  --amber:     #e0a15c;
+  --amber-hot: #f2ba77;
+  --amber-sunk: rgba(224, 161, 92, 0.12);
+
+  --line:       rgba(247, 242, 234, 0.09);
+  --line-bright: rgba(247, 242, 234, 0.18);
+
+  --display: "Sitka Banner", "Sitka Display", Georgia, serif;
+  --text:    "Sitka Text", Georgia, serif;
+  --ui:      "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--ui);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+  user-select: none;
+  cursor: default;
+}
+
+/* Atmosphere ------------------------------------------------------------- */
+
+/* A slow amber dusk behind everything. 24s breath, never quite still.
+   Two stacked ellipses: a wide wash for the room, a tighter core for the light source. */
+.glow {
+  position: fixed;
+  inset: -25% -15% auto -15%;
+  height: 105vh;
+  background:
+    radial-gradient(ellipse 52% 58% at 50% 6%,
+      rgba(224, 161, 92, 0.30) 0%, rgba(210, 138, 74, 0.11) 38%, transparent 68%),
+    radial-gradient(ellipse 26% 26% at 50% 0%,
+      rgba(242, 186, 119, 0.22) 0%, transparent 62%);
+  animation: breathe 24s var(--ease) infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes breathe {
+  from { opacity: 0.62; transform: translateY(-2%) scale(1); }
+  to   { opacity: 1;    transform: translateY(2%)  scale(1.09); }
+}
+
+/* Pulls the corners down so the centre reads as lit rather than merely lighter. */
+.vignette {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse 78% 68% at 50% 42%, transparent 42%, rgba(0, 0, 0, 0.6) 100%);
+}
+
+/* Film grain, so the flat black reads as a surface rather than an absence. */
+.grain {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.07;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Type ------------------------------------------------------------------- */
+
+.eyebrow {
+  font-family: var(--ui);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--paper-faint);
+}
+
+/* Controls --------------------------------------------------------------- */
+
+button {
+  font-family: var(--ui);
+  font-size: 14px;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: default;
+}
+
+.btn {
+  padding: 13px 30px;
+  border: 1px solid var(--line-bright);
+  border-radius: 999px;
+  color: var(--paper);
+  letter-spacing: 0.01em;
+  transition: background 0.4s var(--ease), border-color 0.4s var(--ease), transform 0.4s var(--ease);
+}
+.btn:hover { background: rgba(247, 242, 234, 0.06); border-color: rgba(247, 242, 234, 0.32); }
+.btn:active { transform: scale(0.985); }
+
+.btn-amber {
+  border-color: transparent;
+  background: var(--amber);
+  color: #1a1206;
+  font-weight: 600;
+}
+.btn-amber:hover { background: var(--amber-hot); border-color: transparent; }
+
+/* The escape hatch is deliberately the quietest thing on the screen. */
+.btn-quiet {
+  font-size: 12.5px;
+  color: var(--paper-faint);
+  padding: 8px 4px;
+  border-bottom: 1px solid transparent;
+  transition: color 0.5s var(--ease), border-color 0.5s var(--ease);
+}
+.btn-quiet:hover { color: var(--paper-dim); border-bottom-color: var(--line-bright); }
+
+input[type="text"], input[type="time"], input[type="number"], input[type="password"] {
+  font-family: var(--ui);
+  font-size: 14px;
+  color: var(--paper);
+  background: var(--ink-sunk);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 11px 14px;
+  outline: none;
+  transition: border-color 0.3s var(--ease), background 0.3s var(--ease);
+  cursor: text;
+}
+input:focus { border-color: var(--amber); background: #0b0908; }
+input::placeholder { color: var(--paper-faint); }
+
+/* Entrance --------------------------------------------------------------- */
+
+.rise { opacity: 0; transform: translateY(14px); animation: rise 1s var(--ease) forwards; }
+@keyframes rise { to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .rise { animation-duration: 0.01ms; }
+  .glow { animation: none; }
+}
