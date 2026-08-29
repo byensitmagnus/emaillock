@@ -4,9 +4,7 @@ name: Release
 # The version lives in two files and both must match the tag -- see the check below.
 
 on:
-  push:
-    tags: ['v*']
-
+  workflow_dispatch:
 permissions:
   contents: write
 
