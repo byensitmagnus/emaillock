@@ -231,7 +231,8 @@ for (const [id, text] of Object.entries(labels)) $(id).textContent = text;
 
 // Fill
 $('owner').value = C.owner;
-$('sosCode').value = C.sosCode;
+$('sosCode').value = C.sosCode; // always blank: the code never reaches this page
+if (window.APP.hasCode) $('sosCode').placeholder = T.sosCodeKept;
 $('openFrom').value = C.openFrom;
 $('openUntil').value = C.openUntil;
 $('sosMinutes').value = C.sosMinutes;
@@ -245,7 +246,10 @@ $('statusLead').textContent = window.APP.locked ? T.stateLocked : T.stateOpen;
 $('statusTail').textContent = window.APP.statusTail;
 
 // Days
-let days = C.lockedDays.slice();
+// Only what a pill can show: a hand-edited "Lørdag" or "saturday" would otherwise sit in the
+// list with no way to untick it, and every save would be rejected until the file was edited again.
+const dayKey = d => window.APP.dayKeys.find(k => k.toLowerCase() === String(d).toLowerCase());
+let days = C.lockedDays.map(dayKey).filter(Boolean);
 window.APP.dayNames.forEach((name, i) => {
   const key = window.APP.dayKeys[i];
   const b = document.createElement('button');

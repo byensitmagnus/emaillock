@@ -9,7 +9,7 @@
     <AssemblyName>EmailLock</AssemblyName>
     <RootNamespace>EmailLock</RootNamespace>
     <ApplicationIcon>ui\app.ico</ApplicationIcon>
-    <Version>2.0.0</Version>
+    <Version>2.0.1</Version>
     <Product>EmailLock</Product>
     <Company>EmailLock</Company>
   </PropertyGroup>

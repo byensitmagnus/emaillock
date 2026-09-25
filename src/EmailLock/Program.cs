@@ -33,7 +33,17 @@ class App : ApplicationContext
 
     readonly Dictionary<int, DateTime> _seen = new();
     DateTime _sosUntil = DateTime.MinValue;
+    DateTime _quietUntil = DateTime.MinValue;
     WebWindow? _lock, _settings;
+
+    // No config.json yet = first run. Nothing is enforced until Settings has been saved once,
+    // or installing on a Saturday evening would close Outlook behind a code nobody has chosen.
+    bool _configured = File.Exists(Program.ConfigPath);
+    bool HasCode => _configured && _cfg.LoadError is null;
+
+    static readonly int Session = Process.GetCurrentProcess().SessionId;
+
+    bool LockedNow(DateTime now) => _configured && now >= _sosUntil && Schedule.IsLocked(now, _cfg);
 
     public App()
     {
@@ -63,24 +73,24 @@ class App : ApplicationContext
         timer.Tick += Tick;
         timer.Start();
 
-        // A config the app cannot honour is worth interrupting for, once, at startup.
-        if (_cfg.Validate().Count > 0) _ = ShowSettings();
+        // A first run, or a config the app cannot honour, is worth interrupting for, once, at startup.
+        if (!_configured || _cfg.Validate().Count > 0) _ = ShowSettings();
     }
 
     // --- the loop ---------------------------------------------------------
 
     void Tick(object? sender, EventArgs e)
     {
-        if (DateTime.Now < _sosUntil) return;
-
-        if (!Schedule.IsLocked(DateTime.Now, _cfg))
+        if (!LockedNow(DateTime.Now))
         {
             _seen.Clear();
             return;
         }
 
+        // Only this Windows session: another user's Outlook is not ours to close, and could not be.
         var running = _cfg.Apps
             .SelectMany(name => { try { return Process.GetProcessesByName(name); } catch { return []; } })
+            .Where(p => { try { return p.SessionId == Session; } catch { return false; } })
             .ToList();
 
         if (running.Count == 0)
@@ -89,7 +99,7 @@ class App : ApplicationContext
             return;
         }
 
-        _ = ShowLock();
+        if (DateTime.Now >= _quietUntil) _ = ShowLock();
         foreach (var p in running) Shoo(p);
     }
 
@@ -121,6 +131,11 @@ class App : ApplicationContext
             switch (m.GetProperty("type").GetString())
             {
                 case "dismiss":
+                    // "Close and walk away": stay out of the way for the grace period, or the
+                    // lock screen would bury the app's own "save changes?" prompt until the force-close.
+                    _quietUntil = DateTime.Now.AddSeconds(_cfg.GraceSeconds);
+                    w.Close();
+                    break;
                 case "expired":
                     w.Close();
                     break;
@@ -205,6 +220,17 @@ class App : ApplicationContext
         var incoming = m.GetProperty("config").Deserialize<Config>(
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new Config();
 
+        // No saving your way out of a locked hour either -- SOS first. A config the app can't
+        // honour is the exception: it already locks everything, and it has to stay fixable.
+        if (LockedNow(DateTime.Now) && _cfg.Validate().Count == 0)
+        {
+            _ = w.Call($"window.saveResult({JsonSerializer.Serialize(new[] { Strings.Get("saveLocked") })},null)");
+            return;
+        }
+
+        // The page never had the code (see Config.ForPage): a blank field keeps the saved one.
+        if (HasCode && string.IsNullOrWhiteSpace(incoming.SosCode)) incoming.SosCode = _cfg.SosCode;
+
         var problems = incoming.Validate();
         if (problems.Count > 0)
         {
@@ -221,6 +247,7 @@ class App : ApplicationContext
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                 Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
             }));
+        _configured = true;
 
         SetAutoStart(m.GetProperty("autostart").GetBoolean());
         _seen.Clear();
@@ -235,9 +262,8 @@ class App : ApplicationContext
 
     object Status(DateTime now) => new
     {
-        locked = now >= _sosUntil && Schedule.IsLocked(now, _cfg),
-        lead = now >= _sosUntil && Schedule.IsLocked(now, _cfg)
-            ? Strings.Get("stateLocked") : Strings.Get("stateOpen"),
+        locked = LockedNow(now),
+        lead = LockedNow(now) ? Strings.Get("stateLocked") : Strings.Get("stateOpen"),
         tail = StatusTail(now)
     };
 
@@ -249,9 +275,10 @@ class App : ApplicationContext
         return new
         {
             t = Strings.All,
-            config = _cfg,
+            config = _cfg.ForPage(),
+            hasCode = HasCode,
             autostart = IsAutoStart(),
-            locked = Schedule.IsLocked(now, _cfg),
+            locked = LockedNow(now),
             statusTail = StatusTail(now),
             // Non-empty when the window opened because the file on disk was unusable.
             problems = Describe(_cfg.Validate()),
@@ -263,6 +290,8 @@ class App : ApplicationContext
 
     string StatusTail(DateTime now)
     {
+        if (!_configured) return Strings.Get("notActiveYet");
+
         if (now < _sosUntil)
             return string.Format(Strings.Get("unlockedUntil"), _sosUntil.ToString("HH:mm"));
 
@@ -281,7 +310,7 @@ class App : ApplicationContext
     void RefreshMenu()
     {
         var now = DateTime.Now;
-        var locked = now >= _sosUntil && Schedule.IsLocked(now, _cfg);
+        var locked = LockedNow(now);
         _status.Text = (locked ? Strings.Get("stateLocked") : Strings.Get("stateOpen")) + " · " + StatusTail(now);
         // No quitting your way out of a locked hour. During open hours, quit freely.
         _quit.Enabled = !locked;
@@ -297,10 +326,13 @@ class App : ApplicationContext
                 return JsonSerializer.Deserialize<Config>(File.ReadAllText(Program.ConfigPath),
                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? Fresh();
         }
-        catch
+        catch (Exception e)
         {
-            // Unreadable config must not unlock anything -- Schedule fails closed on the defaults.
-            return Fresh();
+            // Unreadable config must not unlock anything. The defaults alone would -- they are a
+            // valid schedule -- so flag it: Schedule fails closed and Settings says why.
+            var c = Fresh();
+            c.LoadError = e.Message;
+            return c;
         }
         return Fresh();
     }

@@ -1,6 +1,6 @@
 name: Release
 
-# Tagging v2.0.1 builds the installer and publishes it as that release.
+# Run it on a tag (gh workflow run release.yml --ref v2.0.1) to build the installer and publish it as that release.
 # The version lives in two files and both must match the tag -- see the check below.
 
 on:

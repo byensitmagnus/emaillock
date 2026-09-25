@@ -3,6 +3,23 @@
 Notable changes, newest first. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versions follow [semver](https://semver.org/).
 
+## [2.0.1] — 2026-09-25
+
+### Fixed
+
+- **First run no longer locks straight away.** Settings opens and nothing is enforced until
+  you have saved once, with an SOS code of your own. Before, installing outside your open
+  hours closed Outlook within 20 seconds behind a default code you had never seen.
+- **The SOS code no longer reaches the Settings page**, and Settings can't be saved during a
+  locked hour (use SOS first, as with *Quit*). Before, Settings showed the code and could
+  untick today to unlock.
+- **"Close and walk away" now stays out of the way for the grace period**, so the app's own
+  *"save changes?"* prompt can be answered instead of hiding behind the lock screen.
+- Only apps in your own Windows session are closed.
+- A `config.json` that can't be read, or a day name the schedule doesn't know, now keeps
+  you locked and says why in Settings, instead of silently falling back to the defaults.
+- Settings no longer shows "Locked right now" during an SOS unlock.
+
 ## [2.0.0] — 2026-08-15
 
 First public release.
@@ -32,4 +49,5 @@ First public release.
 - A config the app cannot parse or make sense of now **fails closed**: you stay locked. An
   empty SOS code is rejected outright, so a cancelled prompt can no longer unlock.
 
+[2.0.1]: https://github.com/byensitmagnus/emaillock/releases/tag/v2.0.1
 [2.0.0]: https://github.com/byensitmagnus/emaillock/releases/tag/v2.0.0

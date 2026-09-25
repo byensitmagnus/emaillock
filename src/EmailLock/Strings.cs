@@ -58,6 +58,9 @@ public static class Strings
         ["opensAt"] = "Opens {0}",
         ["locksAt"] = "Locks at {0}",
         ["unlockedUntil"] = "Unlocked until {0}",
+        ["notActiveYet"] = "Not active until you save",
+        ["sosCodeKept"] = "Saved. Type a new one to change it",
+        ["saveLocked"] = "Locked right now, so settings can't be saved. Open a locked app and use SOS first.",
         ["traySettings"] = "Settings…",
         ["trayQuit"] = "Quit",
         ["quitPrompt"] = "Quitting removes the lock. Enter your code:",
@@ -71,6 +74,7 @@ public static class Strings
         ["problem_noApps"] = "The app list is empty. Nothing would ever be locked.",
         ["problem_badSosMinutes"] = "SOS must unlock for at least one minute.",
         ["problem_negativeGrace"] = "The grace period cannot be negative.",
+        ["problem_unreadableFile"] = "config.json could not be read, so everything stays locked. {0} Fix the file, or save here to replace it.",
     };
 
     public static readonly Dictionary<string, string> Da = new()
@@ -116,6 +120,9 @@ public static class Strings
         ["opensAt"] = "Åbner {0}",
         ["locksAt"] = "Låser kl. {0}",
         ["unlockedUntil"] = "Låst op til {0}",
+        ["notActiveYet"] = "Ikke aktiv før du gemmer",
+        ["sosCodeKept"] = "Gemt. Skriv en ny for at skifte den",
+        ["saveLocked"] = "Låst lige nu, så indstillingerne kan ikke gemmes. Åbn et låst program og brug SOS først.",
         ["traySettings"] = "Indstillinger…",
         ["trayQuit"] = "Afslut",
         ["quitPrompt"] = "Afslut fjerner låsen. Skriv din kode:",
@@ -129,6 +136,7 @@ public static class Strings
         ["problem_noApps"] = "Listen over programmer er tom. Så bliver intet nogensinde låst.",
         ["problem_badSosMinutes"] = "SOS skal låse op i mindst ét minut.",
         ["problem_negativeGrace"] = "Fristen kan ikke være negativ.",
+        ["problem_unreadableFile"] = "config.json kunne ikke læses, så alt forbliver låst. {0} Ret filen, eller gem her for at erstatte den.",
     };
 }
 

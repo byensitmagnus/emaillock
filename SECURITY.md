@@ -8,8 +8,9 @@ Worth knowing before you assess risk:
 - It runs **without admin rights** and installs per-user.
 - It has **no access to your mail** — no Outlook add-in, no COM registration, no
   credentials. It only sees that a process with a given name is running.
-- It writes exactly two things outside its own install folder: `%APPDATA%\EmailLock\config.json`,
-  and one `HKEY_CURRENT_USER\...\Run` entry if you enable *Start with Windows*.
+- It writes three things outside its own install folder: `%APPDATA%\EmailLock\config.json`,
+  the WebView2 cache in `%LOCALAPPDATA%\EmailLock\WebView2`, and one `HKEY_CURRENT_USER\...\Run`
+  entry if you enable *Start with Windows*.
 - Its one privileged action is closing processes you listed yourself.
 
 **Your SOS code is stored in plain text** in `config.json`. That is deliberate: it is

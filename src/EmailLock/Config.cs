@@ -17,6 +17,10 @@ public class Config
     public string Message { get; set; } =
         "It's {day}, {owner}.\nWhy do you want to open this?";
 
+    /// <summary>Why config.json could not be read, if it could not. Never saved.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string? LoadError { get; set; }
+
     /// <summary>
     /// Whether a typed SOS answer should unlock. The comparison lives here rather than in
     /// the page so the code never reaches the browser, and so it can be tested directly.
@@ -24,6 +28,14 @@ public class Config
     public bool AcceptsSosCode(string? typed) =>
         !string.IsNullOrWhiteSpace(SosCode) &&
         string.Equals(typed?.Trim(), SosCode.Trim(), StringComparison.Ordinal);
+
+    /// <summary>What the settings page gets: everything but the SOS code, for the same reason.</summary>
+    public Config ForPage()
+    {
+        var c = (Config)MemberwiseClone();
+        c.SosCode = "";
+        return c;
+    }
 
     /// <summary>
     /// A rejected setting, named rather than worded. Keeping the prose out of here means
@@ -39,6 +51,8 @@ public class Config
     {
         var problems = new List<Problem>();
 
+        if (LoadError is not null) problems.Add(new("unreadableFile", LoadError));
+
         var fromOk = Schedule.TryTime(OpenFrom, out var from);
         var untilOk = Schedule.TryTime(OpenUntil, out var until);
 
@@ -51,8 +65,10 @@ public class Config
         if (string.IsNullOrWhiteSpace(SosCode))
             problems.Add(new("emptySosCode"));
 
+        // The same match Schedule.IsLockedDay makes. Enum.TryParse would also take "6" or
+        // " Saturday", which pass here and then lock nothing.
         foreach (var day in LockedDays)
-            if (!Enum.TryParse<DayOfWeek>(day, ignoreCase: true, out _))
+            if (!Enum.GetNames<DayOfWeek>().Contains(day, StringComparer.OrdinalIgnoreCase))
                 problems.Add(new("unknownDay", day));
 
         if (Apps.Length == 0) problems.Add(new("noApps"));

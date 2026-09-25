@@ -43,6 +43,11 @@ public class IsLockedTests
     [Fact] public void Backwards_open_window_fails_closed() =>
         Assert.True(Schedule.IsLocked(new DateTime(2026, 8, 19, 12, 0, 0),
                                       new Config { OpenFrom = "17:00", OpenUntil = "07:00" }));
+
+    // A Danish hand-edit of the day names used to leave Saturday open inside office hours.
+    [Fact] public void Day_names_it_cannot_read_fail_closed() =>
+        Assert.True(Schedule.IsLocked(new DateTime(2026, 8, 15, 12, 0, 0),
+                                      new Config { LockedDays = new[] { "Lørdag", "Søndag" } }));
 }
 
 public class NextUnlockTests
@@ -87,4 +92,10 @@ public class NextUnlockTests
         var never = new Config { LockedDays = Enum.GetNames<DayOfWeek>() };
         Assert.Null(Schedule.NextUnlock(new DateTime(2026, 8, 19, 12, 0, 0), never));
     }
+
+    // Must agree with IsLocked, or the lock screen counts down to "now" and closes itself every second.
+    [Fact]
+    public void A_config_that_fails_closed_never_unlocks() =>
+        Assert.Null(Schedule.NextUnlock(new DateTime(2026, 8, 19, 12, 0, 0),
+                                        new Config { LockedDays = new[] { "Lørdag" } }));
 }

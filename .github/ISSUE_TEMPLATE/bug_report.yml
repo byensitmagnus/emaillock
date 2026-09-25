@@ -16,7 +16,7 @@ body:
     attributes:
       label: EmailLock version
       description: Settings → the title bar, or Windows Settings → Apps.
-      placeholder: "2.0.0"
+      placeholder: "2.0.1"
     validations:
       required: true
 
