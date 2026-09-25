@@ -39,6 +39,18 @@ public class ConfigValidateTests
         Assert.Contains(new Config { LockedDays = new[] { "Lørdag" } }.Validate(),
                         p => p.Arg == "Lørdag");
 
+    // Enum.TryParse takes "6" and " Saturday"; the schedule matches names only, so these locked nothing.
+    [Theory]
+    [InlineData("6")]
+    [InlineData("99")]
+    [InlineData(" Saturday")]
+    public void Rejects_a_day_the_schedule_would_not_match(string day) =>
+        AssertRejects("unknownDay", new Config { LockedDays = new[] { day } });
+
+    [Fact]
+    public void Accepts_a_day_name_in_any_case() =>
+        Assert.Empty(new Config { LockedDays = new[] { "saturday", "SUNDAY" } }.Validate());
+
     [Fact]
     public void Rejects_an_empty_app_list() =>
         AssertRejects("noApps", new Config { Apps = Array.Empty<string>() });

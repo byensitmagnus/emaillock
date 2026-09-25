@@ -51,8 +51,10 @@ public class Config
         if (string.IsNullOrWhiteSpace(SosCode))
             problems.Add(new("emptySosCode"));
 
+        // The same match Schedule.IsLockedDay makes. Enum.TryParse would also take "6" or
+        // " Saturday", which pass here and then lock nothing.
         foreach (var day in LockedDays)
-            if (!Enum.TryParse<DayOfWeek>(day, ignoreCase: true, out _))
+            if (!Enum.GetNames<DayOfWeek>().Contains(day, StringComparer.OrdinalIgnoreCase))
                 problems.Add(new("unknownDay", day));
 
         if (Apps.Length == 0) problems.Add(new("noApps"));

@@ -10,11 +10,12 @@ public static class Schedule
 {
     /// <summary>Days in <see cref="Config.LockedDays"/> are locked around the clock.
     /// Every other day is open only inside [OpenFrom, OpenUntil).
-    /// A config this can't make sense of fails closed -- locked.</summary>
+    /// A config this can't make sense of fails closed -- locked. That is anything
+    /// <see cref="Config.Validate"/> objects to, not just a broken window.</summary>
     public static bool IsLocked(DateTime now, Config c)
     {
         if (IsLockedDay(now, c)) return true;
-        if (!TryWindow(c, out var from, out var until)) return true;
+        if (c.Validate().Count > 0 || !TryWindow(c, out var from, out var until)) return true;
 
         var t = now.TimeOfDay;
         return t < from || t >= until;
@@ -24,7 +25,7 @@ public static class Schedule
     /// Returns <paramref name="now"/> when already unlocked.</summary>
     public static DateTime? NextUnlock(DateTime now, Config c)
     {
-        if (!TryWindow(c, out var from, out var until)) return null;
+        if (c.Validate().Count > 0 || !TryWindow(c, out var from, out var until)) return null;
 
         // A week of lookahead is enough: any day-of-week that is ever open recurs within 7 days.
         for (var d = 0; d <= 7; d++)
