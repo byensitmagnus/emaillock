@@ -3,7 +3,7 @@
 Notable changes, newest first. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versions follow [semver](https://semver.org/).
 
-## [Unreleased]
+## [2.0.1] — 2026-09-25
 
 ### Fixed
 
@@ -49,4 +49,5 @@ First public release.
 - A config the app cannot parse or make sense of now **fails closed**: you stay locked. An
   empty SOS code is rejected outright, so a cancelled prompt can no longer unlock.
 
+[2.0.1]: https://github.com/byensitmagnus/emaillock/releases/tag/v2.0.1
 [2.0.0]: https://github.com/byensitmagnus/emaillock/releases/tag/v2.0.0

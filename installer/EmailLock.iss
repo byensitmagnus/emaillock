@@ -3,7 +3,7 @@
 ; needs no .NET install. Per-user by default: no UAC prompt, no admin rights.
 
 #define AppName    "EmailLock"
-#define AppVersion "2.0.0"
+#define AppVersion "2.0.1"
 #define AppExe     "EmailLock.exe"
 #define AppUrl     "https://github.com/byensitmagnus/emaillock"
 
