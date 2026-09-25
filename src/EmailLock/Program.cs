@@ -251,7 +251,7 @@ class App : ApplicationContext
             t = Strings.All,
             config = _cfg,
             autostart = IsAutoStart(),
-            locked = Schedule.IsLocked(now, _cfg),
+            locked = now >= _sosUntil && Schedule.IsLocked(now, _cfg),
             statusTail = StatusTail(now),
             // Non-empty when the window opened because the file on disk was unusable.
             problems = Describe(_cfg.Validate()),
