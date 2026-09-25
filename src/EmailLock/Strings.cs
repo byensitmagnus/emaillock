@@ -71,6 +71,7 @@ public static class Strings
         ["problem_noApps"] = "The app list is empty. Nothing would ever be locked.",
         ["problem_badSosMinutes"] = "SOS must unlock for at least one minute.",
         ["problem_negativeGrace"] = "The grace period cannot be negative.",
+        ["problem_unreadableFile"] = "config.json could not be read, so everything stays locked. {0} Fix the file, or save here to replace it.",
     };
 
     public static readonly Dictionary<string, string> Da = new()
@@ -129,6 +130,7 @@ public static class Strings
         ["problem_noApps"] = "Listen over programmer er tom. Så bliver intet nogensinde låst.",
         ["problem_badSosMinutes"] = "SOS skal låse op i mindst ét minut.",
         ["problem_negativeGrace"] = "Fristen kan ikke være negativ.",
+        ["problem_unreadableFile"] = "config.json kunne ikke læses, så alt forbliver låst. {0} Ret filen, eller gem her for at erstatte den.",
     };
 }
 

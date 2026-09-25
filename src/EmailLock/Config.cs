@@ -17,6 +17,10 @@ public class Config
     public string Message { get; set; } =
         "It's {day}, {owner}.\nWhy do you want to open this?";
 
+    /// <summary>Why config.json could not be read, if it could not. Never saved.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string? LoadError { get; set; }
+
     /// <summary>
     /// Whether a typed SOS answer should unlock. The comparison lives here rather than in
     /// the page so the code never reaches the browser, and so it can be tested directly.
@@ -38,6 +42,8 @@ public class Config
     public IReadOnlyList<Problem> Validate()
     {
         var problems = new List<Problem>();
+
+        if (LoadError is not null) problems.Add(new("unreadableFile", LoadError));
 
         var fromOk = Schedule.TryTime(OpenFrom, out var from);
         var untilOk = Schedule.TryTime(OpenUntil, out var until);

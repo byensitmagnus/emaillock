@@ -63,6 +63,16 @@ public class ConfigValidateTests
     public void Rejects_a_negative_grace_period() =>
         AssertRejects("negativeGrace", new Config { GraceSeconds = -1 });
 
+    // A config.json with a trailing comma used to come back as the valid defaults: the
+    // user's schedule and SOS code silently reset, and Settings never said why.
+    [Fact]
+    public void Rejects_a_file_it_could_not_read() =>
+        AssertRejects("unreadableFile", new Config { LoadError = "trailing comma" });
+
+    [Fact]
+    public void An_unreadable_file_fails_closed() =>
+        Assert.True(Schedule.IsLocked(new DateTime(2026, 8, 19, 12, 0, 0), new Config { LoadError = "trailing comma" }));
+
     [Fact]
     public void Accepts_an_empty_locked_days_list_as_a_weekday_only_schedule() =>
         Assert.Empty(new Config { LockedDays = Array.Empty<string>() }.Validate());
@@ -73,7 +83,7 @@ public class ConfigValidateTests
     public void Every_problem_key_has_text_in_every_language()
     {
         string[] keys = ["badOpenFrom", "badOpenUntil", "backwardsWindow", "emptySosCode",
-                         "unknownDay", "noApps", "badSosMinutes", "negativeGrace"];
+                         "unknownDay", "noApps", "badSosMinutes", "negativeGrace", "unreadableFile"];
         foreach (var key in keys)
         {
             Assert.True(Strings.Da.ContainsKey("problem_" + key), $"Danish text missing for {key}");

@@ -297,10 +297,13 @@ class App : ApplicationContext
                 return JsonSerializer.Deserialize<Config>(File.ReadAllText(Program.ConfigPath),
                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? Fresh();
         }
-        catch
+        catch (Exception e)
         {
-            // Unreadable config must not unlock anything -- Schedule fails closed on the defaults.
-            return Fresh();
+            // Unreadable config must not unlock anything. The defaults alone would -- they are a
+            // valid schedule -- so flag it: Schedule fails closed and Settings says why.
+            var c = Fresh();
+            c.LoadError = e.Message;
+            return c;
         }
         return Fresh();
     }
