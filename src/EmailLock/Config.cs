@@ -29,6 +29,14 @@ public class Config
         !string.IsNullOrWhiteSpace(SosCode) &&
         string.Equals(typed?.Trim(), SosCode.Trim(), StringComparison.Ordinal);
 
+    /// <summary>What the settings page gets: everything but the SOS code, for the same reason.</summary>
+    public Config ForPage()
+    {
+        var c = (Config)MemberwiseClone();
+        c.SosCode = "";
+        return c;
+    }
+
     /// <summary>
     /// A rejected setting, named rather than worded. Keeping the prose out of here means
     /// the message can be translated and the tests stay independent of the machine's language.

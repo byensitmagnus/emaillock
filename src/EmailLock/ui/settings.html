@@ -231,7 +231,8 @@ for (const [id, text] of Object.entries(labels)) $(id).textContent = text;
 
 // Fill
 $('owner').value = C.owner;
-$('sosCode').value = C.sosCode;
+$('sosCode').value = C.sosCode; // always blank: the code never reaches this page
+if (window.APP.hasCode) $('sosCode').placeholder = T.sosCodeKept;
 $('openFrom').value = C.openFrom;
 $('openUntil').value = C.openUntil;
 $('sosMinutes').value = C.sosMinutes;

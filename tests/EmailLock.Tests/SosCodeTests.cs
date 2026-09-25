@@ -39,4 +39,15 @@ public class SosCodeTests
         Assert.False(WithCode("   ").AcceptsSosCode("   "));
         Assert.False(WithCode("").AcceptsSosCode("anything"));
     }
+
+    // The settings page is a browser. What it is handed can be read, so the code stays behind.
+    [Fact]
+    public void The_settings_page_never_gets_the_code()
+    {
+        var cfg = new Config { SosCode = "TEST-1234", Owner = "Magnus" };
+        var page = cfg.ForPage();
+        Assert.DoesNotContain("TEST-1234", System.Text.Json.JsonSerializer.Serialize(page));
+        Assert.Equal("Magnus", page.Owner);
+        Assert.Equal("TEST-1234", cfg.SosCode);
+    }
 }
