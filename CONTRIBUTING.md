@@ -28,7 +28,7 @@ feature requests get a "no", which is what keeps the app small enough to underst
 ## Working on it
 
 ```powershell
-dotnet test                 # 37 tests, no clock or language dependency
+dotnet test                 # 45 tests, no clock or language dependency
 ./build.ps1 -SkipInstaller  # build the app
 ./build.ps1                 # full release, needs Inno Setup 6
 ```
