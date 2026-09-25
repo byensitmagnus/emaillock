@@ -28,7 +28,7 @@ feature requests get a "no", which is what keeps the app small enough to underst
 ## Working on it
 
 ```powershell
-dotnet test                 # 45 tests, no clock or language dependency
+dotnet test                 # 46 tests, no clock or language dependency
 ./build.ps1 -SkipInstaller  # build the app
 ./build.ps1                 # full release, needs Inno Setup 6
 ```
@@ -68,10 +68,12 @@ nothing from the desktop behind the window can end up in a public image.
 ## Releasing
 
 Bump the version in **both** `installer/EmailLock.iss` and `src/EmailLock/EmailLock.csproj`,
-add a `CHANGELOG.md` entry, then push a matching tag:
+add a `CHANGELOG.md` entry, then push a matching tag and start the release on it (CI runs
+only when started by hand):
 
 ```powershell
 git tag v2.0.1 && git push origin v2.0.1
+gh workflow run release.yml --ref v2.0.1
 ```
 
 The release workflow verifies the tag against both files, runs the tests, builds the
