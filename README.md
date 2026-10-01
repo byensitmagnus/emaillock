@@ -252,6 +252,11 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the principles a change should respec
 [docs/roadmap.md](docs/roadmap.md) — what's being considered, what has been deliberately
 rejected, and the honest holes in the current design.
 
+## Made by
+
+EmailLock is made by [Magnus Steinmeier Olsen](https://github.com/byensitmagnus), founder of
+[Byens IT](https://www.byens-it.dk), a Danish gaming-PC and IT company.
+
 ## License
 
 [MIT](LICENSE).
