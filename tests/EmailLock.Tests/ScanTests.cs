@@ -39,6 +39,23 @@ public class ScanTests
     public void Finds_nothing_when_nothing_is_listed() =>
         Assert.Empty(new Scan().Find(Array.Empty<string>(), Me.SessionId));
 
+    // The first look reads every process by name. The ones after it only open what is new.
+    [Fact]
+    public void A_process_started_after_the_first_look_is_found_by_the_next()
+    {
+        var scan = new Scan();
+        var cmd = new[] { "cmd" };
+        scan.Find(cmd, Me.SessionId);
+
+        // Waits on its redirected input, so it is still there when we look.
+        using var child = Process.Start(new ProcessStartInfo("cmd.exe")
+        {
+            RedirectStandardInput = true, UseShellExecute = false, CreateNoWindow = true
+        })!;
+        try { Assert.Contains(child.Id, scan.Find(cmd, Me.SessionId)); }
+        finally { child.Kill(); }
+    }
+
     // Every id is remembered as "not ours" after the first call. Saving a new app list
     // in Settings must not leave that memory standing, or the new app would never lock.
     [Fact]

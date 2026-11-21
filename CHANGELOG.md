@@ -11,7 +11,7 @@ versions follow [semver](https://semver.org/).
   your mail apps once a second. It used to read every process and thread on the machine to
   do that, once per listed app: about 10 ms a second on a machine with 800 processes. It now
   reads the list of process ids and opens only the ones that are new since the last look:
-  about 0.05 ms a second, plus one full look every 30 seconds.
+  about 0.05 ms a second, plus one full look by name every 30 seconds.
 - **The install is 60 MB smaller** (101 MB on disk, down from 162 MB) and the installer is
   33 MB, down from 49 MB. It no longer ships WPF, which the app never loaded, or the .NET
   runtime's messages in 13 languages the app doesn't speak.

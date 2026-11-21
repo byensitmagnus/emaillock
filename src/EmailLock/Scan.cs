@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 namespace EmailLock;
@@ -6,22 +7,22 @@ namespace EmailLock;
 /// Finds the listed apps among the running processes. This runs every second for as long
 /// as the lock is on, which is every night and every weekend, so the cost per call matters.
 ///
-/// Reading every process by name (Process.GetProcessesByName, a toolhelp snapshot, WTS) makes
-/// Windows describe every thread on the machine: about 5 ms per listed app on a machine with
-/// 800 processes. The list of process ids alone takes 0.04 ms. So only ids not seen on the
-/// previous call are opened to read their name; the rest are already known not to be ours.
+/// Asking Windows for processes by name makes it describe every thread on the machine:
+/// about 5 ms per listed app on a machine with 800 processes. The list of process ids alone
+/// takes 0.04 ms. So the by-name look is kept for the full look, and between full looks only
+/// the ids that were not there a second ago are opened to read their name.
 /// </summary>
 public sealed unsafe class Scan
 {
     // An id can be handed to a new process the moment the old one exits. If that happens
-    // between two calls the new process inherits the old verdict, so verdicts are thrown
-    // away this often, and whenever the calls have not been back to back.
-    const long ForgetEveryMs = 30_000, BackToBackMs = 3_000;
+    // between two calls the new process inherits the old verdict, so a full look is taken
+    // this often, and whenever the calls have not been back to back.
+    const long FullLookEveryMs = 30_000, BackToBackMs = 3_000;
 
     HashSet<uint> _notOurs = new(), _next = new();
     IReadOnlyList<string>? _apps;
     uint[] _ids = new uint[4096];
-    long _lastCall, _lastForgot;
+    long _lastCall, _lastFullLook;
 
     /// <summary>Ids of the processes in <paramref name="session"/> whose name is in
     /// <paramref name="apps"/>. Names match as Process.ProcessName does: without ".exe",
@@ -31,12 +32,8 @@ public sealed unsafe class Scan
         var found = new List<int>(0);
 
         var now = Environment.TickCount64;
-        if (!ReferenceEquals(apps, _apps) || now - _lastCall > BackToBackMs || now - _lastForgot > ForgetEveryMs)
-        {
-            _notOurs.Clear();
-            _apps = apps;
-            _lastForgot = now;
-        }
+        var fullLook = !ReferenceEquals(apps, _apps)
+            || now - _lastCall > BackToBackMs || now - _lastFullLook > FullLookEveryMs;
         _lastCall = now;
 
         uint count;
@@ -51,44 +48,76 @@ public sealed unsafe class Scan
         }
 
         _next.Clear();
-        for (var i = 0; i < count; i++)
+        for (var i = 0; i < count && !fullLook; i++)
         {
             var id = _ids[i];
+            if (_notOurs.Contains(id)) { _next.Add(id); continue; }
 
-            // Only this Windows session: another user's Outlook is not ours to close.
-            if (!_notOurs.Contains(id) && IsListed(id, apps)
-                && ProcessIdToSessionId(id, out var s) && s == session)
-                found.Add((int)id);
-            else
-                _next.Add(id);   // ids that have exited are dropped by not being carried over
+            switch (Look(id, apps, session))
+            {
+                case Verdict.Ours: found.Add((int)id); break;
+                case Verdict.NotOurs: _next.Add(id); break;   // ids that have exited are not carried over
+
+                // A process we may not open, such as an Outlook started as another user,
+                // still has to be found. Only the full look can name it.
+                default: fullLook = true; break;
+            }
         }
-        (_notOurs, _next) = (_next, _notOurs);
 
+        if (fullLook)
+        {
+            found.Clear();
+            _next.Clear();
+            _apps = apps;
+            _lastFullLook = now;
+
+            try
+            {
+                foreach (var app in apps)
+                    foreach (var p in Process.GetProcessesByName(app))
+                        using (p)
+                            if (p.SessionId == session) found.Add(p.Id);
+
+                for (var i = 0; i < count; i++)
+                    if (!found.Contains((int)_ids[i])) _next.Add(_ids[i]);
+            }
+            catch { _next.Clear(); }   // nothing learned, so nothing remembered: look again next call
+        }
+
+        (_notOurs, _next) = (_next, _notOurs);
         return found;
     }
 
-    static bool IsListed(uint id, IReadOnlyList<string> apps)
+    enum Verdict { Ours, NotOurs, CannotTell }
+
+    static Verdict Look(uint id, IReadOnlyList<string> apps, int session)
     {
-        // Fails for system processes we may not open. None of those is a mail client.
         var process = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, id);
-        if (process == 0) return false;
+        if (process == 0) return Verdict.CannotTell;
 
         var path = stackalloc char[1024];
         uint length = 1024;
-        var ok = QueryFullProcessImageNameW(process, 0, path, ref length);
+        // The native path: it has no drive letter to fail on, and only the file name is used.
+        var ok = QueryFullProcessImageNameW(process, PROCESS_NAME_NATIVE, path, ref length);
         CloseHandle(process);
-        if (!ok) return false;
+        if (!ok) return Verdict.CannotTell;
 
         var name = new ReadOnlySpan<char>(path, (int)length);
         name = name[(name.LastIndexOf(Path.DirectorySeparatorChar) + 1)..];
         if (name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) name = name[..^4];
 
         for (var i = 0; i < apps.Count; i++)
-            if (name.Equals(apps[i], StringComparison.OrdinalIgnoreCase)) return true;
-        return false;
+        {
+            if (!name.Equals(apps[i], StringComparison.OrdinalIgnoreCase)) continue;
+
+            // Only this Windows session: another user's Outlook is not ours to close.
+            if (!ProcessIdToSessionId(id, out var s)) return Verdict.CannotTell;
+            return s == session ? Verdict.Ours : Verdict.NotOurs;
+        }
+        return Verdict.NotOurs;
     }
 
-    const uint PROCESS_QUERY_LIMITED_INFORMATION = 0x1000;
+    const uint PROCESS_QUERY_LIMITED_INFORMATION = 0x1000, PROCESS_NAME_NATIVE = 1;
 
     [DllImport("psapi.dll")] static extern bool EnumProcesses(uint* ids, uint bytes, out uint bytesReturned);
     [DllImport("kernel32.dll")] static extern nint OpenProcess(uint access, bool inherit, uint id);
