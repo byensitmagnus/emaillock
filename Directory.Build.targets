@@ -9,4 +9,18 @@
     </ItemGroup>
   </Target>
 
+  <!-- A self-contained publish copies the whole Windows Desktop runtime, and that is WinForms
+       and WPF together whichever one the project switched on. EmailLock never loads WPF, so
+       leave it out: about 50 MB of the install. The names are the assemblies marked
+       Profile="WPF" in the SDK's own FrameworkList.xml, the WPF-only ones that list leaves
+       out, and the native libraries only they load. Dropping them here, before the publish
+       list and EmailLock.deps.json are built, keeps the two in step. -->
+  <Target Name="DropWpfRuntime" AfterTargets="ResolveRuntimePackAssets">
+    <ItemGroup>
+      <_WpfOnly Include="@(RuntimePackAsset)" Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(Filename)', '^(Presentation|ReachFramework|System\.Printing|System\.Windows\.Controls\.Ribbon|System\.Windows\.Input\.Manipulations|System\.Windows\.Presentation|System\.Xaml|UIAutomation|WindowsBase|WindowsFormsIntegration|DirectWriteForwarder|D3DCompiler_47_cor3|PenImc_cor3|wpfgfx_cor3)'))" />
+      <RuntimePackAsset Remove="@(_WpfOnly)" />
+      <ReferenceCopyLocalPaths Remove="@(_WpfOnly)" />
+    </ItemGroup>
+  </Target>
+
 </Project>

@@ -6,10 +6,14 @@
     <UseWindowsForms>true</UseWindowsForms>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- The app carries its own Danish and English. The runtime's 13 other languages only
+         translate exception text nobody is shown. -->
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     <AssemblyName>EmailLock</AssemblyName>
     <RootNamespace>EmailLock</RootNamespace>
     <ApplicationIcon>ui\app.ico</ApplicationIcon>
-    <Version>2.0.1</Version>
+    <Version>2.0.2</Version>
     <Product>EmailLock</Product>
     <Company>EmailLock</Company>
   </PropertyGroup>
