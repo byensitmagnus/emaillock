@@ -31,6 +31,7 @@ class App : ApplicationContext
     readonly ToolStripMenuItem _status = new("...") { Enabled = false };
     readonly ToolStripMenuItem _quit;
 
+    readonly Scan _scan = new();
     readonly Dictionary<int, DateTime> _seen = new();
     DateTime _sosUntil = DateTime.MinValue;
     DateTime _quietUntil = DateTime.MinValue;
@@ -87,11 +88,7 @@ class App : ApplicationContext
             return;
         }
 
-        // Only this Windows session: another user's Outlook is not ours to close, and could not be.
-        var running = _cfg.Apps
-            .SelectMany(name => { try { return Process.GetProcessesByName(name); } catch { return []; } })
-            .Where(p => { try { return p.SessionId == Session; } catch { return false; } })
-            .ToList();
+        var running = _scan.Find(_cfg.Apps, Session);
 
         if (running.Count == 0)
         {
@@ -100,14 +97,15 @@ class App : ApplicationContext
         }
 
         if (DateTime.Now >= _quietUntil) _ = ShowLock();
-        foreach (var p in running) Shoo(p);
+        foreach (var id in running) Shoo(id);
     }
 
-    void Shoo(Process p)
+    void Shoo(int id)
     {
         try
         {
-            if (!_seen.TryGetValue(p.Id, out var since)) _seen[p.Id] = since = DateTime.Now;
+            if (!_seen.TryGetValue(id, out var since)) _seen[id] = since = DateTime.Now;
+            using var p = Process.GetProcessById(id);
 
             // ponytail: ask nicely first so Outlook can prompt to save, hard close after graceSeconds.
             // Ceiling: an unanswered save prompt loses the last edits. Raise graceSeconds if that bites.

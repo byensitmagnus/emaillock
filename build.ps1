@@ -15,6 +15,8 @@ dotnet test --nologo
 if ($LASTEXITCODE -ne 0) { throw "tests failed — not building a release from red" }
 
 Write-Host "`n[2/3] publish (self-contained, no .NET needed on the target machine)" -ForegroundColor Cyan
+# publish only adds files: without this, whatever an earlier build left behind ships too.
+Remove-Item src\EmailLock\bin\Release\net8.0-windows\win-x64\publish -Recurse -Force -ErrorAction SilentlyContinue
 dotnet publish src\EmailLock\EmailLock.csproj `
   -c Release -r win-x64 --self-contained true `
   -p:PublishSingleFile=false -p:DebugType=none --nologo

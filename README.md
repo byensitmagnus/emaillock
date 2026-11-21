@@ -219,6 +219,7 @@ dotnet test                 # tests only
 ```
 src/EmailLock/Schedule.cs    when you are locked, and when it lifts — pure, no clock of its own
 src/EmailLock/Config.cs      settings, validation, SOS comparison
+src/EmailLock/Scan.cs        which of the listed apps are running, cheap enough to ask every second
 src/EmailLock/Program.cs     tray icon, the once-a-second loop, window wiring
 src/EmailLock/WebWindow.cs   borderless WebView2 host + the JS bridge
 src/EmailLock/ui/            the two screens, as HTML — this is where the design lives

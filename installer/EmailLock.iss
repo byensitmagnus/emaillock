@@ -3,7 +3,7 @@
 ; needs no .NET install. Per-user by default: no UAC prompt, no admin rights.
 
 #define AppName    "EmailLock"
-#define AppVersion "2.0.1"
+#define AppVersion "2.0.2"
 #define AppExe     "EmailLock.exe"
 #define AppUrl     "https://github.com/byensitmagnus/emaillock"
 
@@ -56,6 +56,37 @@ Name: startup; Description: "{cm:StartupTask}"; GroupDescription: "{cm:Additiona
 [Files]
 Source: "..\src\EmailLock\bin\Release\net8.0-windows\win-x64\publish\*"; \
   DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+
+; 2.0.2 stopped shipping WPF and the runtime's other languages (see Directory.Build.targets).
+; An upgrade only overwrites, so without this the 60 MB stays behind from 2.0.1.
+[InstallDelete]
+Type: files; Name: "{app}\Presentation*.dll"
+Type: files; Name: "{app}\UIAutomation*.dll"
+Type: files; Name: "{app}\ReachFramework.dll"
+Type: files; Name: "{app}\System.Printing.dll"
+Type: files; Name: "{app}\System.Windows.Controls.Ribbon.dll"
+Type: files; Name: "{app}\System.Windows.Input.Manipulations.dll"
+Type: files; Name: "{app}\System.Windows.Presentation.dll"
+Type: files; Name: "{app}\System.Xaml.dll"
+Type: files; Name: "{app}\WindowsBase.dll"
+Type: files; Name: "{app}\WindowsFormsIntegration.dll"
+Type: files; Name: "{app}\DirectWriteForwarder.dll"
+Type: files; Name: "{app}\D3DCompiler_47_cor3.dll"
+Type: files; Name: "{app}\PenImc_cor3.dll"
+Type: files; Name: "{app}\wpfgfx_cor3.dll"
+Type: filesandordirs; Name: "{app}\cs"
+Type: filesandordirs; Name: "{app}\de"
+Type: filesandordirs; Name: "{app}\es"
+Type: filesandordirs; Name: "{app}\fr"
+Type: filesandordirs; Name: "{app}\it"
+Type: filesandordirs; Name: "{app}\ja"
+Type: filesandordirs; Name: "{app}\ko"
+Type: filesandordirs; Name: "{app}\pl"
+Type: filesandordirs; Name: "{app}\pt-BR"
+Type: filesandordirs; Name: "{app}\ru"
+Type: filesandordirs; Name: "{app}\tr"
+Type: filesandordirs; Name: "{app}\zh-Hans"
+Type: filesandordirs; Name: "{app}\zh-Hant"
 
 [Icons]
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExe}"
