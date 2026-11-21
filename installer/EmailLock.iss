@@ -60,6 +60,8 @@ Source: "..\src\EmailLock\bin\Release\net8.0-windows\win-x64\publish\*"; \
 ; 2.0.2 stopped shipping WPF and the runtime's other languages (see Directory.Build.targets).
 ; An upgrade only overwrites, so without this the 60 MB stays behind from 2.0.1.
 [InstallDelete]
+; The runtime version is part of this file name, so every release left one more behind.
+Type: files; Name: "{app}\mscordaccore_amd64_amd64_*.dll"
 Type: files; Name: "{app}\Presentation*.dll"
 Type: files; Name: "{app}\UIAutomation*.dll"
 Type: files; Name: "{app}\ReachFramework.dll"
